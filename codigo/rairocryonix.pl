@@ -68,10 +68,10 @@ gerar_ambiente :-          % Define o predicado 'gerar_ambiente' sem argumentos
     print_ambiente,        % Chama o predicado 'print_ambiente' para exibir o estado das células
     !.                     % O corte (!) evita backtracking após a primeira solução
 
-% ------------------------------------------------------------------------------
+% -------------------------------------------------------------------------------
 % Função para exibir o estado das células
 % Mostra no terminal quais células estão normais, suspeitas ou cancerígenas
-% ------------------------------------------------------------------------------
+% -------------------------------------------------------------------------------
 print_ambiente :-                      % Define o predicado 'print_ambiente' sem argumentos
     celula(_, Celula, K),             % Verifica para cada célula (desconsiderando o primeiro argumento "corpo") o seu estado K
     write(Celula), write(" -> "),     % Escreve o nome da célula no terminal seguido de " -> "
