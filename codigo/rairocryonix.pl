@@ -59,14 +59,15 @@ agente_local(celula1).    % O agente começa na célula 1
 
 
 % Função para iniciar a geração do ambiente e exibir a situação atual
+
 gerar_ambiente :- print_ambiente, !.
 
 % ------------------------------------------------------------------------------
 % Função para iniciar a geração do ambiente e exibir a situação atual
 % ------------------------------------------------------------------------------
-gerar_ambiente :-          % Define o predicado 'gerar_ambiente' sem argumentos
-    print_ambiente,        % Chama o predicado 'print_ambiente' para exibir o estado das células
-    !.                     % O corte (!) evita backtracking após a primeira solução
+%gerar_ambiente :-          % Define o predicado 'gerar_ambiente' sem argumentos
+%    print_ambiente,        % Chama o predicado 'print_ambiente' para exibir o estado das células
+%    !.                     % O corte (!) evita backtracking após a primeira solução
 
 % -------------------------------------------------------------------------------
 % Função para exibir o estado das células
@@ -163,8 +164,7 @@ agente_identificar :-                         % Define o predicado 'agente_ident
     writeln(Celula),                          % Escreve qual célula foi identificada
     !.                                        % Corte para não tentar a próxima cláusula
 
-agente_identificar.                           % Se a célula não for cancerígena ou o agente não estiver ligado, não faz nada
-
+agente_identificar:-     write("Nenhuma célula cancerígena identificada em: "),writeln(Celula), !.  % Se a célula não for cancerígena ou o agente não estiver ligado,Mensagem informativa.
 
 % ------------------------------------------------------------------------------
 % Movimento do agente para uma célula adjacente
