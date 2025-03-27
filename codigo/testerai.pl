@@ -1,19 +1,20 @@
+:- encoding(utf8).
+:- set_prolog_flag(encoding, utf8).
+
 % --------------------------------------------------------------------------
-% Sistema de Nanorobo AnticAncer em Prolog (Versao Puramente Declarativa)
+% Sistema de Nanorrobô Anticâncer em Prolog (Versão Corrigida)
 % --------------------------------------------------------------------------
 
-% 1. Definiçao dos Predicados DinAmicos
-:- dynamic celula/3.
-:- dynamic agente/1.
-:- dynamic agente_local/1.
-:- dynamic celula_cancerigena/1.
-:- dynamic ph_local/2.
-:- dynamic celula_morta/1.
-:- dynamic total_cancerigenas/1.
-:- dynamic celula_visitada/1.
-:- dynamic estado_iniciado/0.
+% Predicados Dinâmicos
+:- dynamic celula/4.                % celula(Nome, Local, Tipo, Receptor)
+:- dynamic agente/1.                % agente(ligado/desligado)
+:- dynamic agente_local/1.          % agente_local(Local)
+:- dynamic ph_local/2.              % ph_local(Local, PH)
+:- dynamic celula_morta/1.          % celula_morta(Nome)
+:- dynamic total_cancerigenas/1.    % total_cancerigenas(Numero)
+:- dynamic estado_iniciado/0.       % ligantes expostos
 
-% 2. Base de Conhecimento (Anatomia do Corpo)
+% Adjacências do corpo humano
 adj(braco, mao).       adj(mao, braco).
 adj(braco, ombro).     adj(ombro, braco).
 adj(mao, dedo).        adj(dedo, mao).
@@ -26,194 +27,183 @@ adj(perna, joelho).    adj(joelho, perna).
 adj(joelho, coxa).     adj(coxa, joelho).
 adj(coxa, abdomen).    adj(abdomen, coxa).
 
-% 3. Inicializaçao do Ambiente
+% Inicialização do sistema
+iniciar :-
+    writeln("Inicializando sistema..."),
+    retractall(celula(_,_,_,_)),
+    retractall(ph_local(_,_)),
+    retractall(total_cancerigenas(_)),
+    retractall(estado_iniciado),
+    retractall(agente(_)),
+    retractall(agente_local(_)),
+    gerar_ph,
+    inicializar_celulas,
+    asserta(agente(desligado)),
+    asserta(agente_local(braco)),
+    writeln("Sistema pronto. Comandos disponíveis:"),
+    writeln("  - ligar."),
+    writeln("  - desligar."),
+    writeln("  - onde."),
+    writeln("  - andar(De, Para)."),
+    writeln("  - varredura."),
+    writeln("  - analisar(NomeCelula)."),
+    writeln("  - matar."),
+    writeln("  - verificar_ph.").
+
+% Gerar PH para os locais
+locais([braco, mao, ombro, torax, abdomen, perna, pe, cabeca, pescoco, coxa, joelho]).
+
 gerar_ph :-
-    Locais = [braco, mao, ombro, torax, abdomen, perna, pe, cabeca, pescoco, coxa, joelho],
+    locais(Locais),
     gerar_ph_para_locais(Locais).
 
 gerar_ph_para_locais([]).
 gerar_ph_para_locais([Local|Resto]) :-
-    random_between(50, 75, PH_temp), 
+    random_between(55, 75, PH_temp),
     PH is PH_temp / 10,
     assertz(ph_local(Local, PH)),
     gerar_ph_para_locais(Resto).
 
 inicializar_celulas :-
-    retractall(celula(_,_,_)),
-    retractall(total_cancerigenas(_)),
     assertz(total_cancerigenas(0)),
-    Locais = [braco, mao, ombro, torax, abdomen, perna, pe, cabeca, pescoco, coxa, joelho],
+    locais(Locais),
     inicializar_celulas_para_locais(Locais).
 
 inicializar_celulas_para_locais([]).
 inicializar_celulas_para_locais([Local|Resto]) :-
     ph_local(Local, PH),
-    random_between(2, 4, Qtd),
-    decidir_tipo_criacao(PH, Local, Qtd),
+    random_between(1, 3, Qtd),
+    iniciar_tipo_criacao(PH, Local, Qtd),
     inicializar_celulas_para_locais(Resto).
 
-decidir_tipo_criacao(PH, Local, _) :- 
-    PH < 6.5, 
-    criar_celulas_ph_baixo(Local).
+iniciar_tipo_criacao(PH, Local, Qtd) :- PH >= 6.5, criar_celulas_normais(Local, Qtd).
+iniciar_tipo_criacao(PH, Local, Qtd) :- PH < 6.5, criar_celulas_ph_baixo(Local, Qtd).
 
-decidir_tipo_criacao(PH, Local, Qtd) :- 
-    PH >= 6.5, 
-    criar_celulas_normais(Local, Qtd).
+criar_celulas_normais(Local, Qtd) :- criar_celulas_normais(Local, Qtd, 1).
+criar_celulas_normais(_, Qtd, _) :- Qtd =< 0, !.
+criar_celulas_normais(Local, Qtd, N) :-
+    format(atom(Nome), 'celula_~w_~w', [N, Local]),
+    assertz(celula(Nome, Local, normal, 0)),
+    Next is N + 1,
+    NewQtd is Qtd - 1,
+    criar_celulas_normais(Local, NewQtd, Next).
 
-criar_celulas_ph_baixo(Local) :-
-    random_between(1, 3, Qtd),
-    asserta(celula(celula_1, Local, 1)),
-    atualizar_contador(1),
-    processar_quantidade_restante(Qtd, Local).
-
-processar_quantidade_restante(Qtd, Local) :-
-    Qtd > 1,
-    Restantes is Qtd - 1,
-    criar_celulas_extra(Local, Restantes).
-
-processar_quantidade_restante(Qtd, _) :-
-    Qtd =< 1.
-
-criar_celulas_extra(_, 0).
-criar_celulas_extra(Local, N) :-
-    N > 0,
+criar_celulas_ph_baixo(Local, Qtd) :- criar_celulas_ph_baixo(Local, Qtd, 1).
+criar_celulas_ph_baixo(_, Qtd, _) :- Qtd =< 0, !.
+criar_celulas_ph_baixo(Local, Qtd, N) :-
+    format(atom(Nome), 'celula_~w_~w', [N, Local]),
     random_between(0, 1, Receptor),
-    atom_number(AtomN, N),
-    atom_concat('celula_extra_', AtomN, Nome),
-    asserta(celula(Nome, Local, Receptor)),
-    atualizar_contador_se_receptor_1(Receptor),
-    Next is N - 1,
-    criar_celulas_extra(Local, Next).
+    definir_tipo_celula(Receptor, Tipo),
+    tipo_cancerigena_contagem(Tipo),
+    assertz(celula(Nome, Local, Tipo, Receptor)),
+    Next is N + 1,
+    NewQtd is Qtd - 1,
+    criar_celulas_ph_baixo(Local, NewQtd, Next).
 
-atualizar_contador_se_receptor_1(1) :-
-    atualizar_contador(1).
-atualizar_contador_se_receptor_1(0).
+tipo_cancerigena_contagem(cancerigena) :- atualizar_contador(1).
+tipo_cancerigena_contagem(_).
 
-criar_celulas_normais(_, 0).
-criar_celulas_normais(Local, N) :-
-    N > 0,
-    atom_number(AtomN, N),
-    atom_concat('celula_', AtomN, Nome),
-    asserta(celula(Nome, Local, 0)),
-    Next is N - 1,
-    criar_celulas_normais(Local, Next).
+definir_tipo_celula(1, cancerigena).
+definir_tipo_celula(0, suspeita) :- random_between(0, 1, 1).
+definir_tipo_celula(0, normal) :- random_between(0, 1, 0).
 
-atualizar_contador(Incremento) :-
+atualizar_contador(Delta) :-
     retract(total_cancerigenas(X)),
-    NewX is X + Incremento,
+    NewX is X + Delta,
     asserta(total_cancerigenas(NewX)).
 
-% 4. Regras do Robo (sem if-then-else)
-verificar_ph :-
-    agente(ligado),
-    agente_local(CelulaAtual),
-    celula(CelulaAtual, Local, _),
-    ph_local(Local, PH),
-    verificar_estado_robo(PH, Local).
-
-% Caso 1: pH baixo e robo nao iniciado → expõe ligantes
-verificar_estado_robo(PH, Local) :-
-    PH < 6.5,
-    \+ estado_iniciado,
-    assertz(estado_iniciado),
-    format("Estrutura alterada! Ligantes expostos em pH=~w.~n", [PH]).
-
-% Caso 2: pH alto e robo iniciado → recolhe ligantes
-verificar_estado_robo(PH, Local) :-
-    PH >= 6.5,
-    estado_iniciado,
-    retractall(estado_iniciado),
-    format("pH alto (~w). Ligantes recolhidos.~n", [PH]).
-
-% Caso 3: pH baixo e ja iniciado → mantem estado
-verificar_estado_robo(PH, _) :-
-    PH < 6.5,
-    estado_iniciado.
-
-% Caso 4: pH alto e nao iniciado → mantem estado
-verificar_estado_robo(PH, _) :-
-    PH >= 6.5,
-    \+ estado_iniciado.
-
-% 5. Comandos do Usuario
 ligar :-
-    retractall(agente(_)),
+    agente(desligado),
+    retract(agente(desligado)),
     asserta(agente(ligado)),
-    agente_local(_),
-    writeln("Robo LIGADO (energizado). Verificando ambiente..."),
+    writeln("Robô ligado. Verificando pH..."),
     verificar_ph.
 
-ligar :-
-    \+ agente_local(_),
-    writeln("ERRO: Robo nao esta em nenhuma celula. Nao pode ligar.").
+ligar :- agente(ligado), writeln("Robô já está ligado.").
 
 desligar :-
+    agente(ligado),
     retractall(agente(_)),
     retractall(estado_iniciado),
     asserta(agente(desligado)),
-    writeln("Robo DESLIGADO (totalmente inativo).").
+    writeln("Robô desligado.").
 
-analisar :-
+desligar :- agente(desligado), writeln("Robô já está desligado.").
+
+onde :-
+    agente_local(Local),
+    format("Robô está em ~w.~n", [Local]).
+
+andar(De, Para) :-
     agente(ligado),
-    estado_iniciado,
-    agente_local(CelulaAtual),
-    celula(CelulaAtual, Local, 1),
-    format("Celula ~w em ~w: RECEPTOR ATIVO (CANCER)!~n", [CelulaAtual, Local]),
-    writeln("Use 'eliminar.' para tentar destruir esta celula.").
+    agente_local(De),
+    adj(De, Para),
+    retract(agente_local(De)),
+    asserta(agente_local(Para)),
+    format("Robô moveu-se de ~w para ~w.~n", [De, Para]),
+    verificar_ph.
 
-analisar :-
-    agente(ligado),
-    estado_iniciado,
-    agente_local(CelulaAtual),
-    celula(CelulaAtual, Local, 0),
-    format("Celula ~w em ~w: saudavel.~n. Não foi possível se conectar", [CelulaAtual, Local]).
-
-analisar :-
-    agente(ligado),
-    \+ estado_iniciado,
-    writeln("AVISO: Ligantes nao expostos (pH alto). Nao pode analisar.").
-
-analisar :-
+andar(_, _) :-
     agente(desligado),
-    writeln("ERRO: Robo desligado. Nao pode analisar.").
+    writeln("Erro: Robô desligado.").
 
-eliminar :-
+andar(De, Para) :-
+    \+ adj(De, Para),
+    format("Erro: Movimento inválido de ~w para ~w.~n", [De, Para]).
+
+verificar_ph :-
+    agente_local(Local),
+    ph_local(Local, PH),
+    format("pH em ~w: ~w~n", [Local, PH]),
+    modificar_estrutura(PH).
+
+modificar_estrutura(PH) :-
+    PH < 6.5, \+ estado_iniciado, assertz(estado_iniciado), writeln("Estrutura ativada: ligantes expostos.").
+modificar_estrutura(PH) :-
+    PH >= 6.5, estado_iniciado, retractall(estado_iniciado), writeln("Estrutura desativada: ligantes recolhidos.").
+modificar_estrutura(_).
+
+varredura :-
     agente(ligado),
-    estado_iniciado,
-    agente_local(CelulaAtual),
-    celula(CelulaAtual, Local, 1),
-    retract(celula(CelulaAtual, Local, 1)),
-    asserta(celula_morta(CelulaAtual)),
+    agente_local(Local),
+    findall(C, celula(C, Local, _, _), Todas), length(Todas, T),
+    findall(C, celula(C, Local, normal, _), Normais), length(Normais, N),
+    findall(C, celula(C, Local, suspeita, _), Suspeitas), length(Suspeitas, S),
+    findall(C, celula(C, Local, cancerigena, _), Cancer), length(Cancer, C),
+    format("Varredura em ~w:\n- Total: ~w\n- Normais: ~w\n- Suspeitas: ~w\n- Cancerígenas: ~w\n", [Local, T, N, S, C]).
+
+analisar(Celula) :-
+    agente(ligado), estado_iniciado,
+    celula(Celula, _, normal, 0), writeln("Analisando ~w: Normal (receptor 0)"), format("~n", [Celula]).
+analisar(Celula) :-
+    agente(ligado), estado_iniciado,
+    celula(Celula, _, suspeita, 0), writeln("Analisando ~w: Suspeita (receptor 0)"), format("~n", [Celula]).
+analisar(Celula) :-
+    agente(ligado), estado_iniciado,
+    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita (receptor 1) - possível câncer"), format("~n", [Celula]).
+analisar(Celula) :-
+    agente(ligado), estado_iniciado,
+    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~n", [Celula]).
+
+analisar(_) :-
+    agente(desligado), writeln("Erro: Robô desligado.").
+
+analisar(C) :-
+    \+ celula(C, _, _, _),
+    format("Erro: Célula ~w inexistente.~n", [C]).
+
+matar :-
+    agente(ligado), estado_iniciado,
+    agente_local(Local),
+    celula(C, Local, cancerigena, 1),
+    retract(celula(C, Local, _, _)),
+    assertz(celula_morta(C)),
     atualizar_contador(-1),
-    format("Celula ~w em ~w ELIMINADA com sucesso!~n", [CelulaAtual, Local]).
+    format("Célula ~w destruída com sucesso!~n", [C]), !.
 
-eliminar :-
-    agente(ligado),
-    estado_iniciado,
-    agente_local(CelulaAtual),
-    celula(CelulaAtual, _, 0),
-    format("ERRO: Celula ~w saudavel. Nao pode ser eliminada.~n", [CelulaAtual]).
+matar :-
+    agente(ligado), estado_iniciado,
+    writeln("Nenhuma célula cancerígena encontrada no local atual.").
 
-eliminar :-
-    agente(ligado),
-    \+ estado_iniciado,
-    writeln("AVISO: Ligantes nao expostos (pH alto). Nao pode eliminar.").
-
-eliminar :-
-    agente(desligado),
-    writeln("ERRO: Robo desligado. Nao pode eliminar celulas.").
-
-% 6. Inicializaçao do sistema
-iniciar :-
-    writeln("Inicializando sistema..."),
-    gerar_ph,
-    inicializar_celulas,
-    asserta(agente(desligado)),
-    retractall(estado_iniciado),
-    asserta(agente_local(celula_1)),
-    writeln("Sistema pronto. Comandos:"),
-    writeln("  - ligar."),
-    writeln("  - desligar."),
-    writeln("  - status."),
-    writeln("  - analisar."),
-    writeln("  - eliminar."),
+matar :-
+    agente(desligado), writeln("Erro: Robô desligado.").
