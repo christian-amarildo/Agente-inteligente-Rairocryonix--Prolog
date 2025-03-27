@@ -166,7 +166,7 @@ analisar :-
     estado_iniciado,
     agente_local(CelulaAtual),
     celula(CelulaAtual, Local, 0),
-    format("Celula ~w em ~w: saudavel.~n", [CelulaAtual, Local]).
+    format("Celula ~w em ~w: saudavel.~n. Não foi possível se conectar", [CelulaAtual, Local]).
 
 analisar :-
     agente(ligado),
@@ -192,7 +192,7 @@ eliminar :-
     estado_iniciado,
     agente_local(CelulaAtual),
     celula(CelulaAtual, _, 0),
-    format("ERRO: Celula ~w e saudavel. Nao pode ser eliminada.~n", [CelulaAtual]).
+    format("ERRO: Celula ~w saudavel. Nao pode ser eliminada.~n", [CelulaAtual]).
 
 eliminar :-
     agente(ligado),
