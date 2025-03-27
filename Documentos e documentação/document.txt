@@ -1,0 +1,13 @@
+Requisitos:
+
+definir um bom esqueleto. 
+controlado: alguem controlando -> Consultas seriam a navegação dele verificar
+
+aleatoriedade:
+corpo com id
+assert a dentro do local.
+quantidade flexivel:
+20 celulas.
+
+autonomo: muito complexo.
+
