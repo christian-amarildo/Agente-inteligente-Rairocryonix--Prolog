@@ -49,22 +49,19 @@ iniciar :-
     writeln("  - ligar."),
     writeln("  - desligar."),
     writeln("  - onde."),
-    writeln("  - andar(De, Para)."),
     writeln("  - varredura."),
     writeln("  - verificar_ph."),
     writeln("  - listar_cancerigenas."),
     writeln("  - listar_suspeitas."),
+    writeln("  - andar(De, Para)."),
+    writeln("  - interagir(NomeDaCelula)."),
     format("Robô está em ~w.~n", [braco]),
     format("Total de células cancerígenas: ~w~n", [Quantidade]).
-
-% --------------------------------------------------------------------------
-% GARANTIR QUE PELO MENOS UMA CÉLULA CANCERÍGENA EXISTA
-% --------------------------------------------------------------------------
 
 listar_suspeitas :-
     findall(Nome, celula(Nome, _, suspeita, _), Lista),
     length(Lista, Total),
-    format("Células suspeitas no corpo (~w):~n", [Total]),
+    format("Total de células suspeitas (~w):~n", [Total]),
     listar(Lista).
 
 listar([]).
@@ -239,15 +236,15 @@ varredura :-
 
 interagir(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, normal, 0), writeln("Analisando ~w: Normal (receptor 0)"), format("~w~n", [Celula]).
+    celula(Celula, _, normal, 0), format("Analisando ~w: Normal (receptor 0).~n", [Celula]).
 
 interagir(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, suspeita, 0), writeln("Analisando ~w: Suspeita é Normal (receptor 0)"), format("~w~n", [Celula]).
+    celula(Celula, _, suspeita, 0), format("Analisando ~w: Suspeita é Normal (receptor 0).~n", [Celula]).
     
 interagir(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita é Cancerígena (receptor 1)"), format("~w~n", [Celula]),
+    celula(Celula, _, suspeita, 1), format("Analisando ~w: Suspeita é Cancerígena (receptor 1).~n", [Celula]),
     celula(Celula, _, _, 1),
     retract(celula(Celula, _, _, 1)),
     assertz(celula_morta(Celula)),
@@ -258,7 +255,7 @@ interagir(Celula) :-
 
 interagir(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~w~n", [Celula]),
+    celula(Celula, _, cancerigena, 1), format("Analisando ~w: Cancerígena (receptor 1).~n", [Celula]),
     celula(Celula, _, _, 1),
     retract(celula(Celula, _, _, 1)),
     assertz(celula_morta(Celula)),
