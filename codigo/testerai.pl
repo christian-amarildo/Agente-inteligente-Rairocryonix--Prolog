@@ -2,7 +2,7 @@
 :- set_prolog_flag(encoding, utf8).
 
 % --------------------------------------------------------------------------
-% Sistema de Nanorrobô Anticâncer em Prolog (Versão Corrigida)
+% Sistema de Nanorrobô de DNA em Prolog
 % --------------------------------------------------------------------------
 
 % Predicados Dinâmicos
