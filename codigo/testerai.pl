@@ -40,6 +40,7 @@ iniciar :-
     inicializar_celulas,
     asserta(agente(desligado)),
     asserta(agente_local(braco)),
+    verificar_celulas_cancerigenas(Quantidade),
     writeln("Sistema pronto. Comandos disponíveis:"),
     writeln("  - ligar."),
     writeln("  - desligar."),
@@ -49,6 +50,16 @@ iniciar :-
     writeln("  - analisar(NomeCelula)."),
     writeln("  - matar."),
     writeln("  - verificar_ph.").
+    writeln("  - verificar_cancerigenas.").
+    format("Robô está em ~w.~n", [braco]).
+    format("Total de células cancerígenas: ~w~n", [Quantidade]).
+
+verificar_cancerigenas :-
+    total_cancerigenas(X),
+    format("Total de células cancerígenas: ~w~n", [X]).
+
+verificar_celula_cancerigenas(X) :-
+    total_cancerigenas(X).
 
 % Gerar PH para os locais
 locais([braco, mao, ombro, torax, abdomen, perna, pe, cabeca, pescoco, coxa, joelho]).
@@ -166,24 +177,38 @@ modificar_estrutura(_).
 varredura :-
     agente(ligado),
     agente_local(Local),
-    findall(C, celula(C, Local, _, _), Todas), length(Todas, T),
-    findall(C, celula(C, Local, normal, _), Normais), length(Normais, N),
-    findall(C, celula(C, Local, suspeita, _), Suspeitas), length(Suspeitas, S),
-    findall(C, celula(C, Local, cancerigena, _), Cancer), length(Cancer, C),
-    format("Varredura em ~w:\n- Total: ~w\n- Normais: ~w\n- Suspeitas: ~w\n- Cancerígenas: ~w\n", [Local, T, N, S, C]).
+    findall(C, celula(C, Local, _, _), TodasCelulas),
+    length(TodasCelulas, Total),
+    findall(C, celula(C, Local, normal, _), Normais),
+    length(Normais, QtdNormais),
+    findall(C, celula(C, Local, suspeita, _), Suspeitas),
+    length(Suspeitas, QtdSuspeitas),
+    findall(C, celula(C, Local, cancerigena, _), Cancerigenas),
+    length(Cancerigenas, QtdCancerigenas),
+    format("Varredura no local ~w:~n", [Local]),
+    format("Total de células: ~w~n", [Total]),  
+    format("Células normais (~w): ~w~n", [QtdNormais, Normais]),
+    format("Células suspeitas (~w): ~w~n", [QtdSuspeitas, Suspeitas]),
+    format("Células cancerígenas (~w): ~w~n", [QtdCancerigenas, Cancerigenas]).
+
+varredura :-
+    agente(desligado),
+    format("Erro: Robô desligado, não pode fazer varredura.~n").
+
 
 analisar(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, normal, 0), writeln("Analisando ~w: Normal (receptor 0)"), format("~n", [Celula]).
+    celula(Celula, _, normal, 0), writeln("Analisando ~w: Normal (receptor 0)"), format("~w~n", [Celula]).
 analisar(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, suspeita, 0), writeln("Analisando ~w: Suspeita (receptor 0)"), format("~n", [Celula]).
+    celula(Celula, _, suspeita, 0), writeln("Analisando ~w: Suspeita é Normal (receptor 0)"), format("~w~n", [Celula]).
 analisar(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita (receptor 1) - possível câncer"), format("~n", [Celula]).
+    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita é Cancerígena (receptor 1)"), format("~w~n", [Celula]).
+
 analisar(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~n", [Celula]).
+    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~w~n", [Celula]).
 
 analisar(_) :-
     agente(desligado), writeln("Erro: Robô desligado.").
@@ -192,18 +217,18 @@ analisar(C) :-
     \+ celula(C, _, _, _),
     format("Erro: Célula ~w inexistente.~n", [C]).
 
-matar :-
+interagir(Celula) :-
     agente(ligado), estado_iniciado,
     agente_local(Local),
-    celula(C, Local, cancerigena, 1),
+    celula(Celula, Local, Tipo, 1).
     retract(celula(C, Local, _, _)),
     assertz(celula_morta(C)),
     atualizar_contador(-1),
     format("Célula ~w destruída com sucesso!~n", [C]), !.
 
-matar :-
+interagir :-
     agente(ligado), estado_iniciado,
     writeln("Nenhuma célula cancerígena encontrada no local atual.").
 
-matar :-
+interagir :-
     agente(desligado), writeln("Erro: Robô desligado.").
