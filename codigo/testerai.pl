@@ -104,7 +104,7 @@ inicializar_celulas :-
 inicializar_celulas_para_locais([]).
 inicializar_celulas_para_locais([Local|Resto]) :-
     ph_local(Local, PH),
-    random_between(1, 1, Qtd),
+    random_between(1, 3, Qtd),
     iniciar_tipo_criacao(PH, Local, Qtd),
     inicializar_celulas_para_locais(Resto).
 
@@ -237,33 +237,17 @@ varredura :-
     agente(desligado),
     format("Erro: Robô desligado, não pode fazer varredura.~n").
 
-
-analisar(Celula) :-
+interagir(Celula) :-
     agente(ligado), estado_iniciado,
     celula(Celula, _, normal, 0), writeln("Analisando ~w: Normal (receptor 0)"), format("~w~n", [Celula]).
-analisar(Celula) :-
-    agente(ligado), estado_iniciado,
-    celula(Celula, _, suspeita, 0), writeln("Analisando ~w: Suspeita é Normal (receptor 0)"), format("~w~n", [Celula]).
-analisar(Celula) :-
-    agente(ligado), estado_iniciado,
-    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita é Cancerígena (receptor 1)"), format("~w~n", [Celula]),
-    interagir(Celula).
-
-analisar(Celula) :-
-    agente(ligado), estado_iniciado,
-    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~w~n", [Celula]),
-    interagir(Celula).
-
-analisar(_) :-
-    agente(desligado), writeln("Erro: Robô desligado.").
-
-analisar(C) :-
-    \+ celula(C, _, _, _),
-    format("Erro: Célula ~w inexistente.~n", [C]).
 
 interagir(Celula) :-
     agente(ligado), estado_iniciado,
-    agente_local(_),
+    celula(Celula, _, suspeita, 0), writeln("Analisando ~w: Suspeita é Normal (receptor 0)"), format("~w~n", [Celula]).
+    
+interagir(Celula) :-
+    agente(ligado), estado_iniciado,
+    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita é Cancerígena (receptor 1)"), format("~w~n", [Celula]),
     celula(Celula, _, _, 1),
     retract(celula(Celula, _, _, 1)),
     assertz(celula_morta(Celula)),
@@ -274,13 +258,18 @@ interagir(Celula) :-
 
 interagir(Celula) :-
     agente(ligado), estado_iniciado,
-    agente_local(_),
-    celula(Celula, _, _, 0),
-    writeln("Nenhuma célula cancerígena encontrada no local atual.").
-
-interagir(_) :-
-    agente(ligado), estado_iniciado,
-    writeln("Não é célula cancerígena.").
+    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~w~n", [Celula]),
+    celula(Celula, _, _, 1),
+    retract(celula(Celula, _, _, 1)),
+    assertz(celula_morta(Celula)),
+    atualizar_contador(-1),
+    format("Célula ~w destruída com sucesso!~n", [Celula]),
+    total_cancerigenas(Total),
+    format("Total de Células Cancerígenas: ~w~n", [Total]), !.
 
 interagir(_) :-
     agente(desligado), writeln("Erro: Robô desligado.").
+
+interagir(C) :-
+    \+ celula(C, _, _, _),
+    format("Erro: Célula ~w inexistente.~n", [C]).
