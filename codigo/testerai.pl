@@ -20,7 +20,7 @@ adj(braco, mao).       adj(mao, braco).
 adj(braco, ombro).     adj(ombro, braco).
 adj(mao, dedo).        adj(dedo, mao).
 adj(ombro, torax).     adj(torax, ombro).
-adj(ombro, pescoco).    adj(pescoco, ombro).
+adj(ombro, pescoco).   adj(pescoco, ombro).
 adj(pescoco, cabeca).  adj(cabeca, pescoco).
 adj(torax, abdomen).   adj(abdomen, torax).
 adj(torax, pescoco).   adj(pescoco, torax).
@@ -42,6 +42,7 @@ iniciar :-
     asserta(total_cancerigenas(0)),
     gerar_ph,
     inicializar_celulas,
+    garantir_uma_cancerigena,
     asserta(agente(desligado)),
     asserta(agente_local(braco)),
     verificar_celulas_cancerigenas(Quantidade),
@@ -57,6 +58,22 @@ iniciar :-
     format("Robô está em ~w.~n", [braco]),
     format("Total de células cancerígenas: ~w~n", [Quantidade]).
 
+% --------------------------------------------------------------------------
+% GARANTIR QUE PELO MENOS UMA CÉLULA CANCERÍGENA EXISTA
+% --------------------------------------------------------------------------
+
+garantir_uma_cancerigena :-
+    total_cancerigenas(0),
+    locais(Todos),
+    random_member(Local, Todos),
+    proximo_id(ID),
+    format(atom(Nome), 'forcada_~w_~w', [ID, Local]),
+    assertz(celula(Nome, Local, cancerigena, 1)),
+    atualizar_contador(1),
+    format("⚠️  Nenhuma célula cancerígena detectada. Criada manualmente: ~w em ~w~n", [Nome, Local]).
+
+garantir_uma_cancerigena :- total_cancerigenas(X), X > 0.
+
 listar_suspeitas :-
     findall(Nome, celula(Nome, _, suspeita, _), Lista),
     length(Lista, Total),
@@ -67,7 +84,6 @@ listar([]).
 listar([H|T]) :-
     writeln(H),
     listar(T).
-
 
 listar_cancerigenas :-
     total_cancerigenas(X),
