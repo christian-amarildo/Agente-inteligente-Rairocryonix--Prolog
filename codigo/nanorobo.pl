@@ -95,6 +95,7 @@ verificar_celulas_cancerigenas(X) :-                % Permite acessar esse núme
     total_cancerigenas(X).                          % Retorna X
 
 
+
 % Criação de Células
 inicializar_celulas :-                      % Começa o processo de criar células
     retractall(total_cancerigenas(_)),      % Remove contagem antiga
