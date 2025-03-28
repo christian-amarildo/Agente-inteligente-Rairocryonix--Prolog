@@ -13,13 +13,15 @@
 :- dynamic celula_morta/1.          % celula_morta(Nome)
 :- dynamic total_cancerigenas/1.    % total_cancerigenas(Numero)
 :- dynamic estado_iniciado/0.       % ligantes expostos
+:- dynamic contador_celulas/1.
 
 % Adjacências do corpo humano
 adj(braco, mao).       adj(mao, braco).
 adj(braco, ombro).     adj(ombro, braco).
 adj(mao, dedo).        adj(dedo, mao).
 adj(ombro, torax).     adj(torax, ombro).
-adj(ombro, cabeca).    adj(cabeca, ombro).
+adj(ombro, pescoco).    adj(pescoco, ombro).
+adj(pescoco, cabeca).  adj(cabeca, pescoco).
 adj(torax, abdomen).   adj(abdomen, torax).
 adj(torax, pescoco).   adj(pescoco, torax).
 adj(perna, pe).        adj(pe, perna).
@@ -35,6 +37,9 @@ iniciar :-
     retractall(estado_iniciado),
     retractall(agente(_)),
     retractall(agente_local(_)),
+    retractall(contador_celulas(_)),
+    asserta(contador_celulas(1)),
+    asserta(total_cancerigenas(0)),
     gerar_ph,
     inicializar_celulas,
     asserta(agente(desligado)),
@@ -46,14 +51,25 @@ iniciar :-
     writeln("  - onde."),
     writeln("  - andar(De, Para)."),
     writeln("  - varredura."),
-    writeln("  - analisar(NomeCelula)."),
-    writeln("  - matar."),
     writeln("  - verificar_ph."),
-    writeln("  - verificar_cancerigenas."),
+    writeln("  - listar_cancerigenas."),
+    writeln("  - listar_suspeitas."),
     format("Robô está em ~w.~n", [braco]),
     format("Total de células cancerígenas: ~w~n", [Quantidade]).
 
-verificar_cancerigenas :-
+listar_suspeitas :-
+    findall(Nome, celula(Nome, _, suspeita, _), Lista),
+    length(Lista, Total),
+    format("Células suspeitas no corpo (~w):~n", [Total]),
+    listar(Lista).
+
+listar([]).
+listar([H|T]) :-
+    writeln(H),
+    listar(T).
+
+
+listar_cancerigenas :-
     total_cancerigenas(X),
     format("Total de células cancerígenas: ~w~n", [X]).
 
@@ -90,32 +106,44 @@ iniciar_tipo_criacao(PH, Local, Qtd) :- PH >= 6.5, criar_celulas_normais(Local, 
 iniciar_tipo_criacao(PH, Local, Qtd) :- PH < 6.5, criar_celulas_ph_baixo(Local, Qtd).
 
 criar_celulas_normais(Local, Qtd) :- criar_celulas_normais(Local, Qtd, 1).
+
 criar_celulas_normais(_, Qtd, _) :- Qtd =< 0, !.
-criar_celulas_normais(Local, Qtd, N) :-
-    format(atom(Nome), 'celula_~w_~w', [N, Local]),
+criar_celulas_normais(Local, Qtd, _) :-
+    proximo_id(ID),
+    format(atom(Nome), 'celula_~w_~w', [ID, Local]),
     assertz(celula(Nome, Local, normal, 0)),
-    Next is N + 1,
     NewQtd is Qtd - 1,
-    criar_celulas_normais(Local, NewQtd, Next).
+    criar_celulas_normais(Local, NewQtd, _).
+
 
 criar_celulas_ph_baixo(Local, Qtd) :- criar_celulas_ph_baixo(Local, Qtd, 1).
+
 criar_celulas_ph_baixo(_, Qtd, _) :- Qtd =< 0, !.
-criar_celulas_ph_baixo(Local, Qtd, N) :-
-    format(atom(Nome), 'celula_~w_~w', [N, Local]),
+criar_celulas_ph_baixo(Local, Qtd, _) :-
+    proximo_id(ID),
+    format(atom(Nome), 'celula_~w_~w', [ID, Local]),
     random_between(0, 1, Receptor),
     definir_tipo_celula(Receptor, Tipo),
     tipo_cancerigena_contagem(Tipo),
     assertz(celula(Nome, Local, Tipo, Receptor)),
-    Next is N + 1,
     NewQtd is Qtd - 1,
-    criar_celulas_ph_baixo(Local, NewQtd, Next).
+    criar_celulas_ph_baixo(Local, NewQtd, _).
+
+proximo_id(ID) :-
+    retract(contador_celulas(N)),
+    ID = N,
+    N1 is N + 1,
+    asserta(contador_celulas(N1)).
+
 
 tipo_cancerigena_contagem(cancerigena) :- atualizar_contador(1).
 tipo_cancerigena_contagem(_).
 
 definir_tipo_celula(1, cancerigena).
-definir_tipo_celula(0, suspeita) :- random_between(0, 1, 1).
-definir_tipo_celula(0, normal) :- random_between(0, 1, 0).
+definir_tipo_celula(0, Tipo) :- random_between(0, 1, R), definir_tipo_celula_por_receptor_zero(R, Tipo).
+definir_tipo_celula_por_receptor_zero(0, normal).
+definir_tipo_celula_por_receptor_zero(1, suspeita).
+
 
 atualizar_contador(Delta) :-
     retract(total_cancerigenas(X)),
@@ -203,11 +231,13 @@ analisar(Celula) :-
     celula(Celula, _, suspeita, 0), writeln("Analisando ~w: Suspeita é Normal (receptor 0)"), format("~w~n", [Celula]).
 analisar(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita é Cancerígena (receptor 1)"), format("~w~n", [Celula]).
+    celula(Celula, _, suspeita, 1), writeln("Analisando ~w: Suspeita é Cancerígena (receptor 1)"), format("~w~n", [Celula]),
+    interagir(Celula).
 
 analisar(Celula) :-
     agente(ligado), estado_iniciado,
-    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~w~n", [Celula]).
+    celula(Celula, _, cancerigena, 1), writeln("Analisando ~w: Cancerígena (receptor 1)"), format("~w~n", [Celula]),
+    interagir(Celula).
 
 analisar(_) :-
     agente(desligado), writeln("Erro: Robô desligado.").
@@ -227,10 +257,15 @@ interagir(Celula) :-
     total_cancerigenas(Total),
     format("Total de Células Cancerígenas: ~w~n", [Total]), !.
 
-
-interagir :-
+interagir(Celula) :-
     agente(ligado), estado_iniciado,
+    agente_local(_),
+    celula(Celula, _, _, 0),
     writeln("Nenhuma célula cancerígena encontrada no local atual.").
 
-interagir :-
+interagir(_) :-
+    agente(ligado), estado_iniciado,
+    writeln("Não é célula cancerígena.").
+
+interagir(_) :-
     agente(desligado), writeln("Erro: Robô desligado.").
