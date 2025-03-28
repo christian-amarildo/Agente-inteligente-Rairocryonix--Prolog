@@ -42,7 +42,6 @@ iniciar :-
     asserta(total_cancerigenas(0)),
     gerar_ph,
     inicializar_celulas,
-    garantir_uma_cancerigena,
     asserta(agente(desligado)),
     asserta(agente_local(braco)),
     verificar_celulas_cancerigenas(Quantidade),
@@ -61,18 +60,6 @@ iniciar :-
 % --------------------------------------------------------------------------
 % GARANTIR QUE PELO MENOS UMA CÉLULA CANCERÍGENA EXISTA
 % --------------------------------------------------------------------------
-
-garantir_uma_cancerigena :-
-    total_cancerigenas(0),
-    locais(Todos),
-    random_member(Local, Todos),
-    proximo_id(ID),
-    format(atom(Nome), 'forcada_~w_~w', [ID, Local]),
-    assertz(celula(Nome, Local, cancerigena, 1)),
-    atualizar_contador(1),
-    format("⚠️  Nenhuma célula cancerígena detectada. Criada manualmente: ~w em ~w~n", [Nome, Local]).
-
-garantir_uma_cancerigena :- total_cancerigenas(X), X > 0.
 
 listar_suspeitas :-
     findall(Nome, celula(Nome, _, suspeita, _), Lista),
@@ -107,14 +94,17 @@ gerar_ph_para_locais([Local|Resto]) :-
     gerar_ph_para_locais(Resto).
 
 inicializar_celulas :-
+    retractall(total_cancerigenas(_)), 
     assertz(total_cancerigenas(0)),
     locais(Locais),
-    inicializar_celulas_para_locais(Locais).
+    inicializar_celulas_para_locais(Locais),
+    garantir_uma_cancerigena.
+
 
 inicializar_celulas_para_locais([]).
 inicializar_celulas_para_locais([Local|Resto]) :-
     ph_local(Local, PH),
-    random_between(1, 3, Qtd),
+    random_between(1, 1, Qtd),
     iniciar_tipo_criacao(PH, Local, Qtd),
     inicializar_celulas_para_locais(Resto).
 
@@ -145,12 +135,21 @@ criar_celulas_ph_baixo(Local, Qtd, _) :-
     NewQtd is Qtd - 1,
     criar_celulas_ph_baixo(Local, NewQtd, _).
 
+garantir_uma_cancerigena :-
+    total_cancerigenas(0),
+    locais(Todos),
+    random_member(Local, Todos),
+    proximo_id(ID),
+    format(atom(Nome), 'celula_~w_~w', [ID, Local]),
+    assertz(celula(Nome, Local, cancerigena, 1)).
+    
+garantir_uma_cancerigena :- total_cancerigenas(X), X > 0.
+
 proximo_id(ID) :-
     retract(contador_celulas(N)),
     ID = N,
     N1 is N + 1,
     asserta(contador_celulas(N1)).
-
 
 tipo_cancerigena_contagem(cancerigena) :- atualizar_contador(1).
 tipo_cancerigena_contagem(_).
