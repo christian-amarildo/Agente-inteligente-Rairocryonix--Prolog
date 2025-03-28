@@ -27,7 +27,6 @@ adj(perna, joelho).    adj(joelho, perna).
 adj(joelho, coxa).     adj(coxa, joelho).
 adj(coxa, abdomen).    adj(abdomen, coxa).
 
-% Inicialização do sistema
 iniciar :-
     writeln("Inicializando sistema..."),
     retractall(celula(_,_,_,_)),
@@ -49,16 +48,16 @@ iniciar :-
     writeln("  - varredura."),
     writeln("  - analisar(NomeCelula)."),
     writeln("  - matar."),
-    writeln("  - verificar_ph.").
-    writeln("  - verificar_cancerigenas.").
-    format("Robô está em ~w.~n", [braco]).
+    writeln("  - verificar_ph."),
+    writeln("  - verificar_cancerigenas."),
+    format("Robô está em ~w.~n", [braco]),
     format("Total de células cancerígenas: ~w~n", [Quantidade]).
 
 verificar_cancerigenas :-
     total_cancerigenas(X),
     format("Total de células cancerígenas: ~w~n", [X]).
 
-verificar_celula_cancerigenas(X) :-
+verificar_celulas_cancerigenas(X) :-
     total_cancerigenas(X).
 
 % Gerar PH para os locais
@@ -219,12 +218,15 @@ analisar(C) :-
 
 interagir(Celula) :-
     agente(ligado), estado_iniciado,
-    agente_local(Local),
-    celula(Celula, Local, Tipo, 1).
-    retract(celula(C, Local, _, _)),
-    assertz(celula_morta(C)),
+    agente_local(_),
+    celula(Celula, _, _, 1),
+    retract(celula(Celula, _, _, 1)),
+    assertz(celula_morta(Celula)),
     atualizar_contador(-1),
-    format("Célula ~w destruída com sucesso!~n", [C]), !.
+    format("Célula ~w destruída com sucesso!~n", [Celula]),
+    total_cancerigenas(Total),
+    format("Total de Células Cancerígenas: ~w~n", [Total]), !.
+
 
 interagir :-
     agente(ligado), estado_iniciado,
