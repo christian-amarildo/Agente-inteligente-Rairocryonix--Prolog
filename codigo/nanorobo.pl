@@ -117,7 +117,7 @@ iniciar_tipo_criacao(PH, Local, Qtd) :- PH < 6.5, criar_celulas_ph_baixo(Local, 
 
 % Criar células normais e em pH baixo
 criar_celulas_normais(Local, Qtd) :- 
-    criar_celulas_normais(Local, Qtd, 1).           % Chama a versão com contador auxiliar (não usado)
+    criar_celulas_normais(Local, Qtd, 1).           % Chama a versão com contador auxiliar
 
 criar_celulas_normais(_, Qtd, _) :- 
     Qtd =< 0, !.                                    % Se quantidade for 0 ou menos, para
