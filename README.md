@@ -17,17 +17,20 @@ O ambiente é inicialmente configurado com células em estados aleatórios. O ag
 
 ## Funcionalidades
 
-O agente pode executar as seguintes ações:
+O agente explorador implementado no sistema possui as seguintes funcionalidades:
 
-- **Ligar e Desligar**: O agente pode ser ativado ou desativado. Quando desligado, o agente não realiza nenhuma ação. Quando ligado, o agente começa a explorar o ambiente.
-  
-- **Movimentação**: O agente pode se mover entre células adjacentes. As células são conectadas entre si em uma estrutura de grafo, e o agente segue essas conexões para explorar diferentes áreas do ambiente.
+- **Ligar e Desligar**: O agente pode ser ativado ou desativado através do comando `agente_interruptor/0`. Quando desligado, o agente não realiza nenhuma ação e permanece inativo. Quando ativado, o agente começa a explorar o ambiente e realizar as tarefas definidas.
 
-- **Identificação de Células Cancerígenas**: O agente examina as células em que está localizado e pode identificar células cancerígenas ou suspeitas.
+- **Movimentação**: O agente é capaz de se mover entre células adjacentes do ambiente. A movimentação é controlada pelo predicado `agente_mover/2`, que permite ao agente transitar de uma célula de origem para uma célula de destino, desde que haja uma conexão definida entre elas (representada pelas adjacências no grafo).
 
-- **Atualização de Estado**: O agente atualiza o estado das células conforme as ações executadas, marcando-as como identificadas ou eliminadas.
+- **Identificação de Células Cancerígenas**: O agente realiza a verificação das células em que está localizado através do predicado `agente_identificar/0`. Ele identifica células que são cancerígenas, suspeitas ou normais, e, com base nessa identificação, pode tomar ações apropriadas, como marcar as células como cancerígenas ou iniciar o processo de eliminação.
 
-- **Busca em Largura (BFS)**: O algoritmo de busca em largura (BFS) é utilizado para explorar o ambiente de forma eficiente e garantir que o agente percorra todas as células necessárias.
+- **Atualização de Estado**: O agente atualiza dinamicamente o estado das células enquanto explora o ambiente. Isso é feito usando o predicado `assertz/1`, que adiciona fatos à base de conhecimento, e o `retract/1`, que remove fatos obsoletos. As células identificadas como cancerígenas ou suspeitas têm seus estados atualizados e podem ser removidas do ambiente após o tratamento.
+
+- **Busca em Largura (BFS)**: O algoritmo de busca em largura (BFS) é utilizado para explorar o ambiente de maneira eficiente. Com isso, o agente é capaz de percorrer todas as células acessíveis, garantindo que ele não explore uma célula mais de uma vez e que todas as células cancerígenas ou suspeitas sejam encontradas. A busca é implementada pelo predicado `bfs/2` e gerenciada por `bfs_queue/3`, permitindo que o agente explore o ambiente de maneira sistemática e ordenada.
+
+Essas funcionalidades permitem ao agente realizar tarefas complexas, como navegar por um ambiente, identificar células cancerígenas, atualizar seu estado, e interagir de forma inteligente com as células. O sistema é projetado para ser flexível, permitindo a expansão das tarefas do agente conforme novas funcionalidades forem necessárias.
+
 
 ## Estrutura do Projeto
 
