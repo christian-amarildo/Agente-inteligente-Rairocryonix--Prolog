@@ -56,8 +56,8 @@ iniciar :-
     writeln("  - listar_suspeitas."),
     writeln("  - andar(De, Para)."),
     writeln("  - interagir(NomeDaCelula)."),
-    format("Robô está em ~w.~n", [braco]),              % Mostra posição inicial do robô
-    format("Total de células cancerígenas: ~w~n", [Quantidade]). % Mostra quantas cancerígenas existem
+    format("Robô está em ~w.~n", [braco]),            
+    format("Total de células cancerígenas: ~w~n", [Quantidade]).
 
 % Gerar PH para os locais
 % Lista de todos os locais possíveis
@@ -79,29 +79,29 @@ gerar_ph_para_locais([Local|Resto]) :-               % Para cada local:
 listar_suspeitas :-                                      % Lista todas as células do tipo "suspeita"
     findall(Nome, celula(Nome, _, suspeita, _), Lista), % Cria uma lista com os nomes das suspeitas
     length(Lista, Total),                                % Conta quantas são
-    format("Total de células suspeitas (~w):~n", [Total]), % Mostra a quantidade
+    format("Total de células suspeitas (~w):~n", [Total]), 
     listar(Lista).                                       % Mostra os nomes
 
-listar([]).                          % Caso a lista esteja vazia, não faz nada
-listar([H|T]) :-                     % Caso contrário:
+listar([]).                         % Caso a lista esteja vazia, não faz nada
+listar([H|T]) :-                    % Caso contrário:
     writeln(H),                     % Escreve o nome da célula
     listar(T).                      % Continua com o restante da lista
 
 listar_cancerigenas :-                              % Mostra o total de células cancerígenas
     total_cancerigenas(X),                          % Pega esse número
-    format("Total de células cancerígenas: ~w~n", [X]). % Exibe
+    format("Total de células cancerígenas: ~w~n", [X]).
 
 verificar_celulas_cancerigenas(X) :-                % Permite acessar esse número fora
     total_cancerigenas(X).                          % Retorna X
 
 
 % Criação de Células
-inicializar_celulas :-                 % Começa o processo de criar células
-    retractall(total_cancerigenas(_)),% Remove contagem antiga
-    assertz(total_cancerigenas(0)),   % Zera contador
-    locais(Locais),                   % Pega todos os locais
+inicializar_celulas :-                      % Começa o processo de criar células
+    retractall(total_cancerigenas(_)),      % Remove contagem antiga
+    assertz(total_cancerigenas(0)),         % Zera contador
+    locais(Locais),                         % Pega todos os locais
     inicializar_celulas_para_locais(Locais), % Cria células em todos os locais
-    garantir_uma_cancerigena.         % Garante que pelo menos uma cancerígena exista
+    garantir_uma_cancerigena.               % Garante que pelo menos uma cancerígena exista
 
 inicializar_celulas_para_locais([]).  % Fim da lista de locais
 inicializar_celulas_para_locais([Local|Resto]) :-    % Para cada local:
