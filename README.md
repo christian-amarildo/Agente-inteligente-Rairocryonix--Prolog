@@ -3,12 +3,17 @@ Este projeto implementa um agente explorador utilizando a linguagem de programa�
 
 ## Descrição do Ambiente
 
-O ambiente é representado por uma rede de células conectadas, onde cada célula pode ter um dos três estados possíveis:
-- **Normal (0)**
-- **Suspeita (1)**
-- **Cancerígena (2)**
+O ambiente no qual o agente explorador atua é composto por um conjunto de células, onde cada célula possui um estado específico. O estado das células pode ser "normal", "suspeita" ou "cancerígena". O agente tem a tarefa de explorar esse ambiente, identificar células com suspeita de câncer e realizar o tratamento adequado. O ambiente é modelado como um grafo, onde as células são representadas como nós e as conexões entre elas (que determinam os movimentos do agente) são as arestas.
 
-A estrutura do ambiente é gerada dinamicamente no início da execução do programa. O agente pode explorar esse ambiente, movendo-se entre as células e realizando a identificação de células cancerígenas.
+O ambiente é inicialmente configurado com células em estados aleatórios. O agente pode se mover entre células adjacentes e interagir com elas para identificar o tipo de célula (normal, suspeita ou cancerígena). As células cancerígenas identificadas são "destruídas" pelo agente, e o estado do ambiente é atualizado conforme o agente interage com ele.
+
+### Estrutura do Ambiente
+
+- **Células**: Representadas por fatos no Prolog, cada célula possui um nome, uma localização e um estado (normal, suspeita ou cancerígena). O estado de cada célula é atualizado conforme o agente interage com ela.
+  
+- **Conexões**: As células estão conectadas entre si, e o agente pode se mover de uma célula para outra se elas forem adjacentes. As conexões entre as células são representadas usando fatos `adj/2`, que definem a relação de adjacência entre as células.
+
+- **Agente**: O agente começa em uma célula inicial e é responsável por explorar o ambiente. Ele pode se mover entre células adjacentes, identificar células cancerígenas e realizar a "eliminar" quando necessário.
 
 ## Funcionalidades
 
