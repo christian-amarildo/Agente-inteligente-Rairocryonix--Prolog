@@ -2,7 +2,7 @@
 :- set_prolog_flag(encoding, utf8).       % Força o Prolog a usar UTF-8 também nas mensagens e strings
 
 % --------------------------------------------------------------------------
-% Sistema de Nanorrobô de DNA em Prolog
+% Agente Inteligente - Nanorrobô de DNA em Prolog
 % --------------------------------------------------------------------------
 
 % -------- Predicados Dinâmicos (valores podem mudar durante a execução) --------
